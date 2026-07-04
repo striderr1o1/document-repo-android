@@ -9,10 +9,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.android_doc_app.ui.theme.AndroiddocappTheme
-
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Column
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,10 +27,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             AndroiddocappTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                   Column() {
+                       Greeting(
+                           name = "Mustafa",
+                           modifier = Modifier.padding(innerPadding)
+                       )
+                       Counter()                   }
                 }
             }
         }
@@ -33,15 +42,27 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
-        text = "Hello $name!",
+        text = "Salam, How're you doing? $name",
         modifier = modifier
     )
+}
+
+@Composable
+fun Counter(){
+   var count by remember { mutableStateOf(0)}
+
+    Button(onClick = {count++}){
+        Text("Count: $count")
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     AndroiddocappTheme {
-        Greeting("Android")
+        Column() {
+            Greeting("Android")
+            Counter()
+        }
     }
 }
