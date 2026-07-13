@@ -7,10 +7,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import com.example.android_doc_app.handlers.PdfHandler
+import com.example.android_doc_app.handlers.TextExtractionEngine
+import com.example.android_doc_app.ui.ExtractedTextScreen
 import com.example.android_doc_app.ui.theme.AndroiddocappTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
 
@@ -34,19 +40,38 @@ class MainActivity : ComponentActivity() {
         // because an Activity is a Context.
         val savedPdf = pdfUri?.let { PdfHandler.copyToAppStorage(this, it) }
 
+        // The engine that turns a PDF's bytes into text. Constructed once here.
+        val textEngine = TextExtractionEngine(this)
+
+        // Observable holder for the extracted text, read by the UI below:
+        //   null -> still extracting, "" -> nothing found, else -> the text.
+        // will only extract text, will not work for scanned pdfs or images currently
+        val extractedText = mutableStateOf<String?>(null)
+
+        // Extract the text here (outside setContent), off the main thread.
+        // lifecycleScope ties the work to this activity's lifecycle so it's
+        // cancelled if the activity is destroyed.
+        if (savedPdf != null) {
+            lifecycleScope.launch {
+                extractedText.value = withContext(Dispatchers.IO) {
+                    savedPdf.inputStream().use { textEngine.extractText(it) }
+                }
+            }
+        }
+
         // Let the app draw behind the status/navigation bars; Scaffold's
         // innerPadding below keeps content from hiding under them.
         enableEdgeToEdge()
 
-        // Bridge into Compose: the lambda describes this activity's entire UI.
+        // Bridge into Compose. All rendering lives in ExtractedTextScreen; here
+        // we only feed it the file name and the observed extraction result.
         setContent {
             AndroiddocappTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // savedPdf is a File? — non-null only when a PDF was shared
-                    // in and copied successfully, so it doubles as our status.
-                    Text(
-                        text = if (savedPdf != null) "Received PDF: ${savedPdf.name}" else "No PDF received",
-                        modifier = Modifier.padding(innerPadding)
+                    ExtractedTextScreen(
+                        pdfName = savedPdf?.name,
+                        extractedText = extractedText.value,
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }

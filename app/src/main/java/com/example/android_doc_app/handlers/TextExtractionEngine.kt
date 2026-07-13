@@ -9,7 +9,7 @@ import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import java.io.InputStream
-import kotlinx.coroutines.tasks.await 
+import kotlinx.coroutines.tasks.await
 
 class TextExtractionEngine(private val context: Context) {
 
